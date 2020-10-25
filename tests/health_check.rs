@@ -1,15 +1,27 @@
 use sqlx::{Connection, Executor, PgConnection, PgPool};
+use std::env;
 use std::net::TcpListener;
 use uuid::Uuid;
 use zero2prod::configuration::{get_configuration, DatabaseSettings};
 use zero2prod::startup;
+use zero2prod::telemetry::{get_subscriber, init_subscriber};
 
 struct TestApp {
     pub address: String,
     pub db_pool: PgPool,
 }
 
+lazy_static::lazy_static! {
+    static ref TRACING: () = {
+        let filter = if env::var("TEST_LOG").is_ok() { "debug" } else { "" };
+        let subscriber = get_subscriber("test".into(), filter.into());
+        init_subscriber(subscriber);
+    };
+}
+
 async fn spawn_app() -> TestApp {
+    lazy_static::initialize(&TRACING);
+
     let listener = TcpListener::bind("127.0.0.1:0").expect("failed to bind random port");
     let port = listener.local_addr().unwrap().port();
     let address = format!("http://127.0.0.1:{}", port);
