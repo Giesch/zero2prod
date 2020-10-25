@@ -3,7 +3,7 @@ set -x
 set -eo pipefail
 
 DB_USER=${POSTGRES_USER:=postgres}
-DB_PASSWORD="${POSTGRES_PASSWORD:=password}"
+DB_PASSWORD="${POSTGRES_PASSWORD:=postgres}"
 DB_NAME="${POSTGRES_DB:=newsletter}"
 DB_PORT="${POSTGRES_PORT:=5432}"
 
