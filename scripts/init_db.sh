@@ -19,6 +19,7 @@ then
       postgres -N 1000
 fi
 
+# Ping postgres until it's available
 until PGPASSWORD="${DB_PASSWORD}" psql -h "localhost" -U "${DB_USER}" -p "${DB_PORT}" -d "postgres" -c '\q'; do
   >&2 echo "Postgres is still unavailable - sleeping"
   sleep 1

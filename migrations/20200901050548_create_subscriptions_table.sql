@@ -1,6 +1,6 @@
 -- Create Subscriptions Table
-CREATE TABLE subscriptions(
-   id uuid NOT NULL,
+CREATE TABLE subscriptions (
+   id UUID NOT NULL,
    PRIMARY KEY (id),
 
    email TEXT NOT NULL UNIQUE,
