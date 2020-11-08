@@ -28,6 +28,8 @@ jobs:
           sudo apt-get install libpq-dev -y
           cargo install --version=0.1.0-beta.1 sqlx-cli --no-default-features --features postgres
           SKIP_DOCKER=true ./scripts/init_db.sh
+      - name: Check sqlx metadata file
+        run: cargo sqlx prepare --check
       - uses: actions-rs/cargo@v1
         with:
           command: test
@@ -104,4 +106,4 @@ jobs:
       - name: Run cargo-tarpaulin
         uses: actions-rs/tarpaulin@v0.1
         with:
-          args: '--ignore-tests'
+          args: "--ignore-tests"

@@ -1,0 +1,23 @@
+name: zero2prod
+# Check https://www.digitalocean.com/docs/app-platform/#regional-availability
+# for a list of all the available options.
+# You can get region slugs from
+# https://www.digitalocean.com/docs/platform/availability-matrix/
+region: nyc
+services:
+  - name: zero2prod
+    dockerfile_path: Dockerfile
+    source_dir: src
+    github:
+      branch: main
+      deploy_on_push: true
+      repo: Giesch/zero2prod
+    health_check:
+      http_path: /health_check
+    # NOTE: should match configuration/production.yaml
+    http_port: 8000
+    # NOTE: should be at least 2 for prod
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    routes:
+      - path: /

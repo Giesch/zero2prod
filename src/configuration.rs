@@ -1,9 +1,16 @@
 use serde::Deserialize;
+use std::convert::{TryFrom, TryInto};
 
 #[derive(Deserialize)]
 pub struct Settings {
     pub database: DatabaseSettings,
-    pub application_port: u16,
+    pub application: ApplicationSettings,
+}
+
+#[derive(Deserialize)]
+pub struct ApplicationSettings {
+    pub port: u16,
+    pub host: String,
 }
 
 #[derive(Deserialize)]
@@ -15,17 +22,49 @@ pub struct DatabaseSettings {
     pub database_name: String,
 }
 
+pub enum Environment {
+    Local,
+    Prod,
+}
+
+impl Environment {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Environment::Local => "local",
+            Environment::Prod => "production",
+        }
+    }
+}
+
+impl TryFrom<String> for Environment {
+    type Error = String;
+
+    fn try_from(s: String) -> Result<Self, Self::Error> {
+        match s.to_lowercase().as_str() {
+            "local" => Ok(Self::Local),
+            "production" => Ok(Self::Prod),
+            other => Err(format!(
+                "{} is not a supported environment. Use 'local' or 'production'.",
+                other
+            )),
+        }
+    }
+}
+
 pub fn get_configuration() -> Result<Settings, config::ConfigError> {
-    // Initialise our configuration reader
     let mut settings = config::Config::default();
+    let base_path = std::env::current_dir().expect("Failed to get current directory");
+    let config_dir = base_path.join("configuration");
 
-    // Add configuration values from a file named `configuration`.
-    // It will look for any top-level file with an extension
-    // that `config` knows how to parse: yaml, json, etc.
-    settings.merge(config::File::with_name("configuration"))?;
+    settings.merge(config::File::from(config_dir.join("base")).required(true))?;
 
-    // Try to convert the configuration values it read into
-    // our Settings type
+    let env: Environment = std::env::var("APP_ENVIRONMENT")
+        .unwrap_or_else(|_| "local".into())
+        .try_into()
+        .expect("Failed to parse APP_ENVIRONMENT");
+
+    settings.merge(config::File::from(config_dir.join(env.as_str())).required(true))?;
+
     settings.try_into()
 }
 
