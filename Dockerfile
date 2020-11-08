@@ -10,6 +10,7 @@ FROM rust:1.47 as cacher
 WORKDIR app
 RUN cargo install cargo-chef
 COPY --from=planner /app/recipe.json recipe.json
+COPY --from=planner /app/Cargo.toml Cargo.toml
 RUN cargo chef cook --release --recipe-path recipe.json
 
 FROM rust:1.47 as builder
