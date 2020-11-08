@@ -1,23 +1,22 @@
 FROM rust:1.47 as planner
 WORKDIR app
+COPY . .
 # NOTE To ensure a reproducible build consider pinning
 # the cargo-chef version with `--version X.X.X`
 RUN cargo install cargo-chef
-COPY . .
 RUN cargo chef prepare --recipe-path recipe.json
 
 FROM rust:1.47 as cacher
 WORKDIR app
 RUN cargo install cargo-chef
 COPY --from=planner /app/recipe.json recipe.json
-COPY --from=planner /app/Cargo.toml Cargo.toml
 RUN cargo chef cook --release --recipe-path recipe.json
 
 FROM rust:1.47 as builder
 WORKDIR app
+COPY . .
 COPY --from=cacher /app/target target
 COPY --from=cacher /usr/local/cargo /usr/local/cargo
-COPY . .
 ENV SQLX_OFFLINE true
 RUN cargo build --release --bin zero2prod
 
