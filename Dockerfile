@@ -5,6 +5,7 @@ COPY . .
 # NOTE To ensure a reproducible build consider pinning
 # the cargo-chef version with `--version X.X.X`
 RUN cargo chef prepare --recipe-path recipe.json
+RUN cat recipe.json
 
 FROM rust:1.47 AS cacher
 WORKDIR app
