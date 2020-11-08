@@ -18,9 +18,6 @@ pub struct SubscribeReq {
         name = %form.name
     )
 )]
-// TODO remove this once sqlx releases the fix
-// https://github.com/rust-lang/rust-clippy/issues/5849
-#[allow(clippy::toplevel_ref_arg)]
 pub async fn subscribe(
     form: web::Form<SubscribeReq>,
     pool: web::Data<PgPool>,
