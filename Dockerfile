@@ -1,14 +1,12 @@
 FROM rust:1.47 AS planner
 WORKDIR app
-# NOTE To ensure a reproducible build consider pinning
-# the cargo-chef version with `--version X.X.X`
-RUN cargo install cargo-chef --version 0.1.5
+RUN cargo install cargo-chef --version 0.1.6
 COPY . .
 RUN cargo chef prepare --recipe-path recipe.json 
 
 FROM rust:1.47 AS cacher
 WORKDIR app
-RUN cargo install cargo-chef --version 0.1.5
+RUN cargo install cargo-chef --version 0.1.6
 COPY --from=planner /app/recipe.json recipe.json
 RUN RUST_BACKTRACE=1 cargo chef cook --release --recipe-path recipe.json
 
