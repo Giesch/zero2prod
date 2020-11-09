@@ -3,7 +3,7 @@ name: zero2prod
 # for a list of all the available options.
 # You can get region slugs from
 # https://www.digitalocean.com/docs/platform/availability-matrix/
-region: fra
+region: nyc
 services:
   - name: zero2prod
     dockerfile_path: Dockerfile
