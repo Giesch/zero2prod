@@ -8,7 +8,7 @@ RUN cargo chef prepare --recipe-path recipe.json
 
 FROM rust:1.47 AS cacher
 WORKDIR app
-RUN cargo install cargo-chef
+RUN cargo install cargo-chef --version 0.1.5
 COPY --from=planner /app/recipe.json recipe.json
 RUN RUST_BACKTRACE=1 cargo chef cook --release --recipe-path recipe.json
 
