@@ -1,13 +1,9 @@
 name: zero2prod
-# Check https://www.digitalocean.com/docs/app-platform/#regional-availability
-# for a list of all the available options.
-# You can get region slugs from
-# https://www.digitalocean.com/docs/platform/availability-matrix/
 region: nyc
 services:
   - name: zero2prod
     dockerfile_path: Dockerfile
-    source_dir: src
+    source_dir: .
     github:
       branch: main
       deploy_on_push: true
