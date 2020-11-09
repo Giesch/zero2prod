@@ -18,14 +18,14 @@
 # ENV SQLX_OFFLINE true
 # RUN cargo build --release --bin zero2prod
 
-FROM rust:1.47 AS builder
-WORKDIR app
+FROM rust AS builder
+WORKDIR usr/src/app
 COPY . .
 ENV SQLX_OFFLINE true
 RUN cargo build --release --bin zero2prod
 
 FROM debian:buster-slim AS runtime
-WORKDIR app
+WORKDIR usr/src/app
 # OpenSSL is dynamically linked by some dependencies
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends openssl \
