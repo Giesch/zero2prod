@@ -1,5 +1,6 @@
 name: zero2prod
 region: nyc
+
 services:
   - name: zero2prod
     dockerfile_path: Dockerfile
@@ -8,8 +9,10 @@ services:
       branch: main
       deploy_on_push: true
       repo: Giesch/zero2prod
+
     health_check:
       http_path: /health_check
+
     # NOTE: should match configuration/production.yaml
     http_port: 8000
     # NOTE: should be at least 2 for prod
@@ -17,3 +20,28 @@ services:
     instance_size_slug: basic-xxs
     routes:
       - path: /
+
+    envs:
+      - key: APP_DATABASE__USERNAME
+        scope: RUN_TIME
+        value: ${newsletter.USERNAME}
+      - key: APP_DATABASE__PASSWORD
+        scope: RUN_TIME
+        value: ${newsletter.PASSWORD}
+      - key: APP_DATABASE__HOST
+        scope: RUN_TIME
+        value: ${newsletter.HOSTNAME}
+      - key: APP_DATABASE__PORT
+        scope: RUN_TIME
+        value: ${newsletter.PORT}
+      - key: APP_DATABASE__DATABASE_NAME
+        scope: RUN_TIME
+        value: ${newsletter.DATABASE}
+
+databases:
+  - engine: PG
+    name: newsletter
+    # NOTE maybe want more in prod
+    num_nodes: 1
+    size: db-s-dev-database
+    version: "12"

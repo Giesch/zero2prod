@@ -21,6 +21,7 @@ tracing-bunyan-formatter = "0.1.6"
 tracing-log = "0.1.1"
 tracing-futures = "0.2.4"
 tracing-actix-web = "0.2.1"
+serde-aux = "1.1.0"
 
 [dependencies.tracing-subscriber]
 version = "0.2.12"
