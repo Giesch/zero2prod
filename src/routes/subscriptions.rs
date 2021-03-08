@@ -3,31 +3,39 @@ use actix_web::{web, HttpResponse};
 use chrono::Utc;
 use serde::Deserialize;
 use sqlx::PgPool;
+use std::convert::{TryFrom, TryInto};
 use uuid::Uuid;
 
 #[derive(Deserialize)]
-pub struct SubscribeReq {
+pub struct FormData {
     email: String,
     name: String,
+}
+
+impl TryFrom<FormData> for NewSubscriber {
+    type Error = String;
+
+    fn try_from(form: FormData) -> Result<Self, Self::Error> {
+        let email = SubscriberEmail::parse(form.email)?;
+        let name = SubscriberName::parse(form.name)?;
+
+        Ok(NewSubscriber { name, email })
+    }
 }
 
 #[tracing::instrument(
     name = "Adding a new subscriber",
     skip(form, pool),
-    fields(
-        email = %form.email,
-        name = %form.name
-    )
+    fields(email = %form.email, name = %form.name)
 )]
 pub async fn subscribe(
-    form: web::Form<SubscribeReq>,
+    form: web::Form<FormData>,
     pool: web::Data<PgPool>,
 ) -> Result<HttpResponse, HttpResponse> {
-    let new_subscriber = NewSubscriber {
-        email: form.0.email,
-        name: SubscriberName::parse(form.0.name)
-            .map_err(|_| HttpResponse::BadRequest().finish())?,
-    };
+    let new_subscriber: NewSubscriber = form
+        .0
+        .try_into()
+        .map_err(|_| HttpResponse::BadRequest().finish())?;
 
     insert_subscriber(&pool, &new_subscriber)
         .await
@@ -50,7 +58,7 @@ pub async fn insert_subscriber(
             VALUES ($1, $2, $3, $4)
         "#,
         Uuid::new_v4(),
-        new_subscriber.email,
+        new_subscriber.email.as_ref(),
         new_subscriber.name.as_ref(),
         Utc::now()
     )
