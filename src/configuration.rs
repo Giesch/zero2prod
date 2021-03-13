@@ -40,6 +40,10 @@ impl EmailClientSettings {
     pub fn sender(&self) -> Result<SubscriberEmail, String> {
         SubscriberEmail::parse(self.sender_email.clone())
     }
+
+    pub fn base_url(&self) -> Result<reqwest::Url, url::ParseError> {
+        reqwest::Url::parse(&self.base_url)
+    }
 }
 
 impl DatabaseSettings {

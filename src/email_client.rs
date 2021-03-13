@@ -5,24 +5,30 @@ use std::time::Duration;
 
 pub struct EmailClient {
     http_client: Client,
-    base_url: String,
     sender: SubscriberEmail,
     authorization_token: String,
+    email_url: reqwest::Url,
 }
 
 impl EmailClient {
-    pub fn new(base_url: String, sender: SubscriberEmail, authorization_token: String) -> Self {
+    pub fn new(
+        base_url: reqwest::Url,
+        sender: SubscriberEmail,
+        authorization_token: String,
+    ) -> Result<Self, url::ParseError> {
         let http_client = Client::builder()
             .timeout(Duration::from_secs(10))
             .build()
             .unwrap();
 
-        Self {
+        let email_url = base_url.join("email")?;
+
+        Ok(Self {
             http_client,
-            base_url,
             sender,
             authorization_token,
-        }
+            email_url,
+        })
     }
 
     pub async fn send_email(
@@ -32,8 +38,6 @@ impl EmailClient {
         html_body: &str,
         text_body: &str,
     ) -> Result<(), reqwest::Error> {
-        let url = format!("{}/email", self.base_url); // TODO use reqwest::Url
-
         let request_body = SendEmailRequest {
             from: self.sender.as_ref(),
             to: recipient.as_ref(),
@@ -43,7 +47,7 @@ impl EmailClient {
         };
 
         self.http_client
-            .post(&url)
+            .post(self.email_url.clone())
             .header("X-Postmark-Server-Token", &self.authorization_token)
             .json(&request_body)
             .send()
@@ -218,6 +222,7 @@ mod tests {
 
     /// Get a test instance of `EmailClient`.
     fn email_client(base_url: String) -> EmailClient {
-        EmailClient::new(base_url, email(), Faker.fake())
+        let base_url = reqwest::Url::parse(&base_url).unwrap();
+        EmailClient::new(base_url, email(), Faker.fake()).unwrap()
     }
 }

@@ -22,12 +22,17 @@ async fn main() -> std::io::Result<()> {
     let sender_email = config
         .email_client
         .sender()
-        .expect("Invalid sender email address.");
+        .expect("Invalid sender email address");
+    let base_url = config
+        .email_client
+        .base_url()
+        .expect("Invalid email client base url");
     let email_client = EmailClient::new(
-        config.email_client.base_url,
+        base_url,
         sender_email,
         config.email_client.authorization_token,
-    );
+    )
+    .expect("Invalid email url path");
 
     let address = format!("{}:{}", config.application.host, config.application.port);
     let listener = TcpListener::bind(address)?;
