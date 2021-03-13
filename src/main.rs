@@ -2,6 +2,7 @@ use sqlx::postgres::PgPoolOptions;
 use std::net::TcpListener;
 use std::time::Duration;
 use zero2prod::configuration::get_configuration;
+use zero2prod::email_client::EmailClient;
 use zero2prod::startup::run;
 use zero2prod::telemetry::{get_subscriber, init_subscriber};
 
@@ -18,7 +19,17 @@ async fn main() -> std::io::Result<()> {
         .await
         .expect("Failed to connect to postgres");
 
+    let sender_email = config
+        .email_client
+        .sender()
+        .expect("Invalid sender email address.");
+    let email_client = EmailClient::new(
+        config.email_client.base_url,
+        sender_email,
+        config.email_client.authorization_token,
+    );
+
     let address = format!("{}:{}", config.application.host, config.application.port);
     let listener = TcpListener::bind(address)?;
-    run(listener, db_pool)?.await
+    run(listener, db_pool, email_client)?.await
 }

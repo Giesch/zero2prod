@@ -3,6 +3,7 @@ use std::env;
 use std::net::TcpListener;
 use uuid::Uuid;
 use zero2prod::configuration::{get_configuration, DatabaseSettings};
+use zero2prod::email_client::EmailClient;
 use zero2prod::startup;
 use zero2prod::telemetry::{get_subscriber, init_subscriber};
 
@@ -31,7 +32,18 @@ async fn spawn_app() -> TestApp {
 
     let db_pool = configure_db(&config.database).await;
 
-    let server = startup::run(listener, db_pool.clone()).expect("failed to run server");
+    let sender_email = config
+        .email_client
+        .sender()
+        .expect("Invalid sender email address.");
+    let email_client = EmailClient::new(
+        config.email_client.base_url,
+        sender_email,
+        config.email_client.authorization_token,
+    );
+
+    let server =
+        startup::run(listener, db_pool.clone(), email_client).expect("failed to run server");
 
     // This is torn down along with the runtime by the actix_rt::test macro
     let _ = tokio::spawn(server);
