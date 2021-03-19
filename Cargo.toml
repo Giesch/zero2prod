@@ -29,6 +29,7 @@ tracing-actix-web = "0.3.0-beta.2"
 serde-aux = "1.0.1"
 unicode-segmentation = "1.7.1"
 validator = "0.12.0"
+rand = { version = "0.8", features=["std_rng"] }
 
 [dev-dependencies]
 lazy_static = "1.4.0"
@@ -36,7 +37,8 @@ claim = "0.5.0"
 quickcheck = "0.9.2"
 quickcheck_macros = "0.9.1"
 fake = "~2.3.0" # NOTE this can be bumped when quickcheck hits 1.0
-wiremock = "0.4.9"
+wiremock = "0.5"
 serde_json = "1.0.61"
 actix-rt = "2"
 tokio = { version = "1", features = ["macros"] }
+linkify = "0.5.0"
