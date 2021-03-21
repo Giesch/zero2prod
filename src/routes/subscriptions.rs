@@ -47,7 +47,7 @@ pub async fn subscribe(
         .begin()
         .await
         .map_err(|_| HttpResponse::InternalServerError().finish())?;
-    let subscriber_id = insert_subscriber(&mut transaction, &new_subscriber)
+    let subscriber_id = get_or_insert_subscriber(&mut transaction, &new_subscriber)
         .await
         .map_err(|_| HttpResponse::InternalServerError().finish())?;
     let subscription_token = generate_subscription_token();
@@ -106,10 +106,46 @@ pub async fn send_confirmation_email(
 }
 
 #[tracing::instrument(
+    name = "Getting or creating subscriber",
+    skip(transaction, new_subscriber)
+)]
+async fn get_or_insert_subscriber(
+    transaction: &mut Transaction<'_, Postgres>,
+    new_subscriber: &NewSubscriber,
+) -> Result<Uuid, sqlx::Error> {
+    if let Some(id) = get_subscriber_id_by_email(transaction, &new_subscriber.email).await? {
+        Ok(id)
+    } else {
+        insert_subscriber(transaction, new_subscriber).await
+    }
+}
+
+#[tracing::instrument(name = "Getting subscriber by email", skip(transaction, email))]
+async fn get_subscriber_id_by_email(
+    transaction: &mut Transaction<'_, Postgres>,
+    email: &SubscriberEmail,
+) -> Result<Option<Uuid>, sqlx::Error> {
+    let row = sqlx::query!(
+        r#"
+            SELECT (id) FROM subscriptions WHERE email = $1
+        "#,
+        email.as_ref(),
+    )
+    .fetch_optional(transaction)
+    .await
+    .map_err(|e| {
+        tracing::error!("Failed to execute query: {:?}", e);
+        e
+    })?;
+
+    Ok(row.map(|r| r.id))
+}
+
+#[tracing::instrument(
     name = "Saving new subscriber details to the database",
     skip(transaction, new_subscriber)
 )]
-pub async fn insert_subscriber(
+async fn insert_subscriber(
     transaction: &mut Transaction<'_, Postgres>,
     new_subscriber: &NewSubscriber,
 ) -> Result<Uuid, sqlx::Error> {

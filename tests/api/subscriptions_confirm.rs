@@ -76,3 +76,34 @@ async fn clicking_on_the_confirmation_link_confirms_a_subscriber() {
     assert_eq!(saved.name, "le guin");
     assert_eq!(saved.status, "confirmed");
 }
+
+#[actix_rt::test]
+async fn subscribing_twice_sends_two_emails() {
+    // Arrange
+    let app = spawn_app().await;
+    let body = "name=le%20guin&email=ursula_le_guin%40gmail.com";
+
+    Mock::given(path("/email"))
+        .and(method("POST"))
+        .respond_with(ResponseTemplate::new(200))
+        .expect(2)
+        .mount(&app.email_server)
+        .await;
+
+    app.post_subscriptions(body.into()).await;
+    app.post_subscriptions(body.into()).await;
+
+    let received_email_requests = &app.email_server.received_requests().await.unwrap();
+    let second_email_request = &received_email_requests[1];
+    let second_confirmation_links = app.get_confirmation_links(second_email_request);
+
+    // Act
+    let response = reqwest::get(second_confirmation_links.html)
+        .await
+        .unwrap()
+        .error_for_status()
+        .unwrap();
+
+    // Assert
+    assert_eq!(response.status().as_u16(), 200);
+}
